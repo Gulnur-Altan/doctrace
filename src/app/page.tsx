@@ -1,69 +1,204 @@
-import Image from "next/image";
+
+"use client";
+
+import { FormEvent, useState } from "react";
 
 export default function Home() {
+  const [question, setQuestion] = useState("");
+  const [answer, setAnswer] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!question.trim() || loading) return;
+
+    setLoading(true);
+    setAnswer("");
+    setError("");
+
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          message: question,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Something went wrong.");
+      }
+
+      setAnswer(data.answer);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Unable to investigate this question."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function useExample(example: string) {
+    setQuestion(example);
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+    <main className="min-h-screen bg-[#f8f6f3] text-[#252322]">
+      <div className="mx-auto flex min-h-screen w-full max-w-5xl flex-col px-6 py-8 md:px-10">
+        <header className="flex items-center justify-between border-b border-[#ded9d4] pb-5">
+          <div>
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#252322] text-sm font-bold text-white">
+                D
+              </div>
+
+              <h1 className="text-xl font-semibold tracking-tight">
+                DocTrace
+              </h1>
+            </div>
+
+            <p className="mt-2 text-sm text-[#746e69]">
+              AI documentation investigation agent
+            </p>
+          </div>
+
+          <div className="hidden rounded-full border border-[#d8d2cc] bg-white px-3 py-1.5 text-xs font-medium text-[#625d58] sm:block">
+            Angular 20 → 21
+          </div>
+        </header>
+
+        <section className="flex flex-1 flex-col py-12">
+          <div className="mx-auto w-full max-w-3xl">
+            <div className="mb-10">
+              <p className="mb-3 text-sm font-medium uppercase tracking-[0.16em] text-[#8a6f58]">
+                Documentation investigation
+              </p>
+
+              <h2 className="text-4xl font-semibold leading-tight tracking-[-0.03em] md:text-5xl">
+                Investigate Angular migration questions.
+              </h2>
+
+              <p className="mt-5 max-w-2xl text-base leading-7 text-[#68615c]">
+                Ask a technical question and DocTrace will investigate the
+                connected Sanity Knowledge Base before generating an answer.
+              </p>
+            </div>
+
+            <form onSubmit={handleSubmit}>
+              <div className="rounded-2xl border border-[#d8d2cc] bg-white p-3 shadow-sm">
+                <textarea
+                  value={question}
+                  onChange={(event) => setQuestion(event.target.value)}
+                  placeholder="What should I consider when migrating an Angular 20 application to Angular 21?"
+                  rows={4}
+                  className="w-full resize-none bg-transparent px-3 py-2 text-base outline-none placeholder:text-[#aaa39d]"
+                />
+
+                <div className="flex items-center justify-between border-t border-[#ebe7e3] pt-3">
+                  <span className="px-3 text-xs text-[#928b85]">
+                    Powered by Sanity Context MCP
+                  </span>
+
+                  <button
+                    type="submit"
+                    disabled={!question.trim() || loading}
+                    className="rounded-xl bg-[#252322] px-5 py-2.5 text-sm font-medium text-white transition hover:bg-[#3a3735] disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    {loading ? "Investigating..." : "Investigate"}
+                  </button>
+                </div>
+              </div>
+            </form>
+
+            <div className="mt-5">
+              <p className="mb-2 text-xs font-medium uppercase tracking-wider text-[#8b847e]">
+                Try an example
+              </p>
+
+              <div className="flex flex-wrap gap-2">
+                {[
+                  "What are the main breaking changes in Angular 21?",
+                  "How does zoneless change detection affect migration?",
+                  "What should I review in my Angular testing setup?",
+                ].map((example) => (
+                  <button
+                    key={example}
+                    type="button"
+                    onClick={() => useExample(example)}
+                    className="rounded-full border border-[#d8d2cc] bg-white px-3.5 py-2 text-left text-xs text-[#625d58] transition hover:border-[#aaa39d] hover:bg-[#f2efec]"
+                  >
+                    {example}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {loading && (
+              <div className="mt-10 rounded-2xl border border-[#ded9d4] bg-white p-6">
+                <div className="flex items-center gap-3">
+                  <div className="h-2 w-2 animate-pulse rounded-full bg-[#8a6f58]" />
+                  <p className="text-sm text-[#68615c]">
+                    Investigating the documentation...
+                  </p>
+                </div>
+
+                <div className="mt-5 space-y-3">
+                  <div className="h-3 w-4/5 animate-pulse rounded bg-[#eeeae6]" />
+                  <div className="h-3 w-full animate-pulse rounded bg-[#eeeae6]" />
+                  <div className="h-3 w-3/5 animate-pulse rounded bg-[#eeeae6]" />
+                </div>
+              </div>
+            )}
+
+            {error && (
+              <div className="mt-10 rounded-2xl border border-red-200 bg-red-50 p-5">
+                <p className="text-sm font-medium text-red-800">
+                  Investigation failed
+                </p>
+                <p className="mt-1 text-sm text-red-700">{error}</p>
+              </div>
+            )}
+
+            {answer && !loading && (
+              <section className="mt-10">
+                <div className="mb-3 flex items-center justify-between">
+                  <h3 className="text-sm font-semibold uppercase tracking-wider text-[#6f6862]">
+                    Investigation result
+                  </h3>
+
+                  <span className="rounded-full bg-[#eee9e4] px-3 py-1 text-xs font-medium text-[#6f6257]">
+                    Sanity Knowledge Base
+                  </span>
+                </div>
+
+                <article className="rounded-2xl border border-[#d8d2cc] bg-white p-6 shadow-sm md:p-8">
+                  <div className="whitespace-pre-wrap text-[15px] leading-7 text-[#373330]">
+                    {answer}
+                  </div>
+                </article>
+              </section>
+            )}
+          </div>
+        </section>
+
+        <footer className="border-t border-[#ded9d4] pt-5 text-xs text-[#918a84]">
+          <div className="flex flex-col justify-between gap-2 sm:flex-row">
+            <span>DocTrace · Sanity Challenge 2026</span>
+            <span>
+              Structured content → Knowledge Base → Context MCP → AI agent
+            </span>
+          </div>
+        </footer>
+      </div>
+    </main>
   );
 }
